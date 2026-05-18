@@ -4,9 +4,10 @@ import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.config.ModConfigEvent;
+import org.jetbrains.annotations.NotNull;
 
 @Mod.EventBusSubscriber(modid = OrchidChat.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
-public class Config {
+public final class Config {
 
 	private static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
 
@@ -36,8 +37,9 @@ public class Config {
 
 	static final ForgeConfigSpec SPEC = BUILDER.build();
 
+	// Public config vals REQUIRE @Nullable or @NotNull!
 
-	public static String format;
+	public static @NotNull String format = FORMAT.getDefault();
 
 
 	@SubscribeEvent
