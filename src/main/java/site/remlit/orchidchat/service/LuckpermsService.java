@@ -13,12 +13,10 @@ public class LuckpermsService {
 	public LuckPerms api;
 
 	public void register() {
-		try {
-			api = LuckPermsProvider.get();
-			enabled = true;
-		} catch (Exception e) {
-			LOGGER.warn("Luckperms not found, related features will be disabled.");
-		}
+		api = LuckPermsProvider.get();
+		enabled = true;
+
+		LOGGER.info("Luckperms hook loaded.");
 	}
 
 }

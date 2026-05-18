@@ -18,8 +18,12 @@ public class OrchidChat {
 	private ChatService chatService;
 
 	public OrchidChat() {
-		luckpermsService = new LuckpermsService();
-		luckpermsService.register();
+		try {
+			luckpermsService = new LuckpermsService();
+			luckpermsService.register();
+		} catch (Exception e) {
+			LOGGER.warn("Luckperms not found, related features will be disabled.");
+		}
 
 		chatService = new ChatService(luckpermsService);
 		chatService.register();
@@ -28,4 +32,5 @@ public class OrchidChat {
 
 		LOGGER.info("Finished startup!");
 	}
+
 }

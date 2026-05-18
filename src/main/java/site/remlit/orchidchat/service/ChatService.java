@@ -15,6 +15,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.slf4j.Logger;
 import site.remlit.orchidchat.Config;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Objects;
 import java.util.regex.MatchResult;
@@ -22,9 +23,9 @@ import java.util.regex.Pattern;
 
 public class ChatService {
 
-	public LuckpermsService luckpermsService;
+	public @Nullable LuckpermsService luckpermsService;
 
-	public ChatService(LuckpermsService luckpermsService) {
+	public ChatService(@Nullable LuckpermsService luckpermsService) {
 		this.luckpermsService = luckpermsService;
 	}
 
@@ -57,7 +58,7 @@ public class ChatService {
 					.replace("%msg%", message);
 
 
-			if (luckpermsService.enabled) {
+			if (!Objects.isNull(luckpermsService) && luckpermsService.enabled) {
 				User lpUser = luckpermsService.api.getUserManager()
 						.getUser(event.getPlayer().getUUID());
 				if (Objects.isNull(lpUser)) return;
@@ -116,8 +117,7 @@ public class ChatService {
 				player.sendSystemMessage(finalMessage);
 			}
 		} catch (Exception e) {
-			LOGGER.error("Failed to modify chat! " + e.getLocalizedMessage());
-			e.printStackTrace();
+			LOGGER.error("Failed to modify chat! " + e.getLocalizedMessage(), e);
 		}
 	}
 
