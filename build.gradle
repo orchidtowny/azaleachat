@@ -8,7 +8,6 @@ plugins {
     id 'eclipse'
     id 'idea'
     id 'net.minecraftforge.gradle' version '[6.0.16,6.2)'
-    id 'com.gradleup.shadow' version '9.4.1'
 }
 
 group = mod_group_id
@@ -62,15 +61,21 @@ repositories {
     mavenCentral()
 }
 
+jarJar.enable()
+
 dependencies {
-    minecraft("net.minecraftforge:forge:${minecraft_version}-${forge_version}")
+    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
-    shadow('net.kyori:adventure-api:[5.1.1,)')
-    shadow('net.kyori:adventure-text-minimessage:[5.1.1,)')
-    shadow('net.kyori:adventure-text-serializer-gson:[5.1.1,)')
+    minecraftLibrary 'net.kyori:adventure-text-minimessage:5.1.1'
+    minecraftLibrary 'net.kyori:adventure-text-serializer-gson:5.1.1'
 
-    // Needs not be bundled
-    compileOnly(fg.deobf('net.luckperms:api:5.4'))
+    jarJar(group: 'net.kyori', name: 'adventure-text-minimessage', version: '[5.1.1]')
+    jarJar(group: 'net.kyori', name: 'adventure-text-serializer-gson', version: '[5.1.1]')
+
+    compileOnly fg.deobf('net.luckperms:api:5.4')
+
+    // Server-side mods for runServer task
+    runtimeOnly fg.deobf('libs:LuckPerms-Forge:5.4.102')
 }
 
 processResources {
@@ -99,18 +104,6 @@ jar {
     }
 
     finalizedBy 'reobfJar'
-}
-
-assemble {
-    dependsOn 'shadowJar'
-}
-
-shadowJar {
-    configurations = [project.configurations.shadow]
-
-    relocate 'com', 'site.remlit.orchidchat.lib.com'
-    relocate 'net', 'site.remlit.orchidchat.lib.net'
-    relocate 'org', 'site.remlit.orchidchat.lib.org'
 }
 
 tasks.withType(JavaCompile).configureEach {

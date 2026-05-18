@@ -4,6 +4,7 @@ import com.mojang.logging.LogUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
+import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
 import net.luckperms.api.cacheddata.CachedMetaData;
 import net.luckperms.api.model.user.User;
 import net.minecraft.server.MinecraftServer;
@@ -22,9 +23,9 @@ import java.util.regex.Pattern;
 
 public class ChatService {
 
-	public @Nullable LuckPermsService luckpermsService;
+	public @Nullable LuckpermsService luckpermsService;
 
-	public ChatService(@Nullable LuckPermsService luckpermsService) {
+	public ChatService(@Nullable LuckpermsService luckpermsService) {
 		this.luckpermsService = luckpermsService;
 	}
 
@@ -39,7 +40,7 @@ public class ChatService {
 	}
 
 	private static final MiniMessage MM = MiniMessage.miniMessage();
-	private static final GsonComponentSerializer JCS = GsonComponentSerializer.gson();
+	private static final JSONComponentSerializer JCS = GsonComponentSerializer.gson();
 	private static final Pattern LUCKPERMS_META_PATTERN = Pattern.compile("%luckperms_meta_([a-zA-Z0-9]*)%");
 
 	@SubscribeEvent

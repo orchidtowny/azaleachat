@@ -5,7 +5,7 @@ import net.luckperms.api.LuckPerms;
 import net.luckperms.api.LuckPermsProvider;
 import org.slf4j.Logger;
 
-public class LuckPermsService {
+public class LuckpermsService {
 
 	public boolean enabled = false;
 	private static final Logger LOGGER = LogUtils.getLogger();
@@ -16,7 +16,7 @@ public class LuckPermsService {
 		api = LuckPermsProvider.get();
 		enabled = true;
 
-		LOGGER.info("LuckPerms hook loaded.");
+		LOGGER.info("Luckperms hook loaded.");
 	}
 
 }
