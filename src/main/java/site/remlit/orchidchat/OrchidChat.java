@@ -10,6 +10,7 @@ import net.minecraftforge.fml.config.ModConfig;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
+import site.remlit.orchidchat.service.ChannelService;
 import site.remlit.orchidchat.service.ChatService;
 import site.remlit.orchidchat.service.LuckPermsService;
 
@@ -23,6 +24,7 @@ public final class OrchidChat {
 
 
 	private @Nullable LuckPermsService luckPermsService;
+	private @Nullable ChannelService channelService;
 	private @Nullable ChatService chatService;
 
 
@@ -45,7 +47,11 @@ public final class OrchidChat {
 			LOGGER.warn("LuckPerms not found, related features will be disabled.");
 		}
 
-		chatService = new ChatService(luckPermsService);
+		channelService = new ChannelService(luckPermsService);
+		channelService.setupChannels();
+		channelService.register();
+
+		chatService = new ChatService(luckPermsService, channelService);
 		chatService.register();
 
 		LOGGER.info("Finished startup!");

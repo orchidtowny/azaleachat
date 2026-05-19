@@ -8,15 +8,16 @@ import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
 import net.luckperms.api.cacheddata.CachedMetaData;
 import net.luckperms.api.model.user.User;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.ServerChatEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import site.remlit.orchidchat.Config;
 
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Objects;
 import java.util.regex.MatchResult;
@@ -25,9 +26,14 @@ import java.util.regex.Pattern;
 public class ChatService {
 
 	public @Nullable LuckPermsService luckPermsService;
+	public @Nullable ChannelService channelService;
 
-	public ChatService(@Nullable LuckPermsService luckPermsService) {
+	public ChatService(
+			@Nullable LuckPermsService luckPermsService,
+			@Nullable ChannelService channelService
+	) {
 		this.luckPermsService = luckPermsService;
+		this.channelService = channelService;
 	}
 
 
@@ -38,8 +44,45 @@ public class ChatService {
 	private static final @NotNull Pattern LUCKPERMS_META_PATTERN = Pattern.compile("%luckperms_meta_([a-zA-Z0-9]*)%");
 
 
+	/**
+	 * Register events and other essentials for this service
+	 * */
+	@ApiStatus.Internal
 	public void register() {
 		MinecraftForge.EVENT_BUS.register(this);
+	}
+
+
+	/**
+	 * Send a message to a channel
+	 *
+	 * @param channel Channel to send to
+	 * @param players List of players on the server,
+	 *                or at least the targets of this message
+	 * @param formatted Formatted message
+	 * */
+	public void sendMessage(
+			@NotNull String channel,
+			@NotNull List<Player> players,
+			@NotNull String formatted
+	) {
+		boolean skipExpensiveLookup = !Objects.isNull(channelService) && channelService.channels.get(channel) == null;
+
+		Component miniMessage = MM.deserialize(formatted);
+		String rawJson = JCS.serialize(miniMessage);
+		net.minecraft.network.chat.Component finalMessage = net.minecraft.network.chat.Component.Serializer
+				.fromJson(rawJson);
+
+		if (Objects.isNull(finalMessage)) return;
+
+		LOGGER.info("[{}] {}", channel, finalMessage.getString());
+
+		for (Player player : players) {
+			if (!skipExpensiveLookup && !Objects.isNull(channelService) && !channelService.canPlayerSee(channel, player))
+				continue;
+
+			player.sendSystemMessage(finalMessage);
+		}
 	}
 
 
@@ -99,28 +142,17 @@ public class ChatService {
 				}
 			}
 
-
-			// Conversion
-			Component miniMessage = MM.deserialize(formatted);
-			String rawJson = JCS.serialize(miniMessage);
-			net.minecraft.network.chat.Component finalMessage = net.minecraft.network.chat.Component.Serializer
-					.fromJson(rawJson);
-
-
-			event.setCanceled(true);
-
-			if (Objects.isNull(finalMessage)) return;
-
 			MinecraftServer server = event.getPlayer().getServer();
 			if (Objects.isNull(server)) return;
 
+			event.setCanceled(true);
 
-			// Sending
-			LOGGER.info(finalMessage.getString());
-
-			for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-				player.sendSystemMessage(finalMessage);
-			}
+			this.sendMessage(
+					"global",
+					server.getPlayerList().getPlayers().stream()
+							.map(it -> (Player)it).toList(),
+					formatted
+			);
 		} catch (Throwable e) {
 			LOGGER.error("Failed to modify chat! " + e.getLocalizedMessage(), e);
 		}
