@@ -8,6 +8,7 @@ plugins {
     id 'eclipse'
     id 'idea'
     id 'net.minecraftforge.gradle' version '[6.0.16,6.2)'
+    id 'com.gradleup.shadow' version '9.4.1'
 }
 
 group = mod_group_id
@@ -54,28 +55,17 @@ minecraft {
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 repositories {
-    flatDir {
-        dir 'libs'
-    }
-
     mavenCentral()
 }
-
-jarJar.enable()
 
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
-    minecraftLibrary 'net.kyori:adventure-text-minimessage:5.1.1'
-    minecraftLibrary 'net.kyori:adventure-text-serializer-gson:5.1.1'
-
-    jarJar(group: 'net.kyori', name: 'adventure-text-minimessage', version: '[5.1.1]')
-    jarJar(group: 'net.kyori', name: 'adventure-text-serializer-gson', version: '[5.1.1]')
+    shadow('net.kyori:adventure-api:[5.1.1,)')
+    shadow('net.kyori:adventure-text-minimessage:[5.1.1,)')
+    shadow('net.kyori:adventure-text-serializer-gson:[5.1.1,)')
 
     compileOnly fg.deobf('net.luckperms:api:5.4')
-
-    // Server-side mods for runServer task
-    runtimeOnly fg.deobf('libs:LuckPerms-Forge:5.4.102')
 }
 
 processResources {
@@ -86,6 +76,7 @@ processResources {
                              mod_authors         : mod_authors, mod_description: mod_description,]
 
     inputs.properties replaceProperties
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
     filesMatching(['META-INF/mods.toml', 'pack.mcmeta']) {
         expand replaceProperties + [project: project]
@@ -104,6 +95,23 @@ jar {
     }
 
     finalizedBy 'reobfJar'
+}
+
+build {
+    dependsOn 'shadowJar'
+}
+
+shadowJar {
+    configurations = [project.configurations.shadow]
+
+    relocate 'com.google', 'site.remlit.orchidchat.lib.com.google'
+    relocate 'net.kyori', 'site.remlit.orchidchat.lib.net.kyori'
+
+    finalizedBy 'reobfShadowJar'
+}
+
+reobf {
+    shadowJar {}
 }
 
 tasks.withType(JavaCompile).configureEach {

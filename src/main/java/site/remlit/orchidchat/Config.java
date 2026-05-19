@@ -5,8 +5,11 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.config.ModConfigEvent;
 
-@Mod.EventBusSubscriber(modid = OrchidChat.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
-public class Config {
+@Mod.EventBusSubscriber(
+		modid = OrchidChat.MODID,
+		bus = Mod.EventBusSubscriber.Bus.MOD
+)
+public final class Config {
 
 	private static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
 

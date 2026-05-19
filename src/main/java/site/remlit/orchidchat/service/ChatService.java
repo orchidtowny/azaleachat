@@ -9,11 +9,12 @@ import net.luckperms.api.cacheddata.CachedMetaData;
 import net.luckperms.api.model.user.User;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.ServerChatEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 import org.slf4j.Logger;
 import site.remlit.orchidchat.Config;
+import site.remlit.orchidchat.OrchidChat;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -21,23 +22,21 @@ import java.util.Objects;
 import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
 
+@Mod.EventBusSubscriber(
+		modid = OrchidChat.MODID,
+		bus = Mod.EventBusSubscriber.Bus.MOD
+)
 public class ChatService {
 
-	public @Nullable LuckpermsService luckpermsService;
+	public @Nullable LuckPermsService luckpermsService;
 
-	public ChatService(@Nullable LuckpermsService luckpermsService) {
+	public ChatService(@Nullable LuckPermsService luckpermsService) {
 		this.luckpermsService = luckpermsService;
 	}
 
 
 	private static final Logger LOGGER = LogUtils.getLogger();
 
-	/**
-	 * Registers events for the chat service.
-	 * */
-	public void register() {
-		MinecraftForge.EVENT_BUS.register(this);
-	}
 
 	private static final MiniMessage MM = MiniMessage.miniMessage();
 	private static final JSONComponentSerializer JCS = GsonComponentSerializer.gson();
