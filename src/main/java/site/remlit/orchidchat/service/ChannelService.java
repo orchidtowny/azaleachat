@@ -1,7 +1,6 @@
 package site.remlit.orchidchat.service;
 
 import com.mojang.logging.LogUtils;
-import net.luckperms.api.cacheddata.CachedMetaData;
 import net.luckperms.api.model.user.User;
 import net.luckperms.api.node.types.PermissionNode;
 import net.minecraft.world.entity.player.Player;
@@ -12,7 +11,9 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
+import site.remlit.orchidchat.Config;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -28,6 +29,7 @@ public class ChannelService {
 	private static final @NotNull Logger LOGGER = LogUtils.getLogger();
 
 	public Map<@NotNull String, @Nullable PermissionNode> channels = Map.of();
+	public Map<@NotNull String, @NotNull List<String>> channelShortcuts = Map.of();
 
 
 	/**
@@ -39,6 +41,14 @@ public class ChannelService {
 	}
 
 
+	/**
+	 * Register a new chat channel and the permission required (if any) to see and chat in it.
+	 *
+	 * @param name Name of channel
+	 * @param perm Permission required for channel (optional)
+	 *
+	 * @throws IllegalArgumentException When a channel is already registered by that name
+	 * */
 	public void registerChannel(
 			@NotNull String name,
 			@Nullable PermissionNode perm
@@ -78,18 +88,74 @@ public class ChannelService {
 				.asBoolean();
 	}
 
+	/**
+	 * Determine what channel a chat message should go in.
+	 *
+	 * @param sender Sender of the message
+	 * @param rawMessage Raw message contents
+	 *
+	 * @return Name of channel
+	 * */
+	public @NotNull String determineChannel(
+			@NotNull Player sender,
+			@NotNull String rawMessage
+	) {
+		String channel = "global";
+
+		// TODO: allow setting channel to persist, then check sender against list.
+
+		for (String c : channelShortcuts.keySet()) {
+			List<String> shortcuts = channelShortcuts.get(c);
+
+			for (String shortcut : shortcuts) {
+				if (rawMessage.startsWith(shortcut)) {
+					channel = c;
+					break;
+				}
+			}
+		}
+
+		return channel;
+	}
+
 
 	@ApiStatus.Internal
 	public void setupChannels() {
 		this.registerChannel("global", null);
+
+		for (String channel : Config.channels.keySet()) {
+			String permission = Config.channels.get(channel);
+
+			@Nullable PermissionNode node = null;
+			if (!permission.isBlank()) node = PermissionNode.builder()
+					.permission(permission)
+					.build();
+
+			try {
+				this.registerChannel(channel, node);
+			} catch (IllegalArgumentException e) {
+				LOGGER.error("There was a problem registering channel {}: {}", channel, e.getMessage());
+			}
+		}
+
+		for (String channel : Config.channelShortcuts.keySet()) {
+			if (!channels.containsKey(channel)) {
+				LOGGER.warn("Channel shortcut for channel {} configured but channel doesn't exist, ignoring", channel);
+				continue;
+			}
+
+			this.channelShortcuts.put(channel, Config.channelShortcuts.get(channel));
+		}
 	}
 
 	@ApiStatus.Internal
 	public void clearChannels() {
 		channels = Map.of();
+		channelShortcuts = Map.of();
 	}
 
 
+	// Reload channel configurations whenever the mod config changes
 	@SubscribeEvent
 	public void onLoad(final ModConfigEvent event) {
 		this.clearChannels();

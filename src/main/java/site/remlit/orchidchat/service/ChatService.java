@@ -68,7 +68,7 @@ public class ChatService {
 	) {
 		boolean skipExpensiveLookup = !Objects.isNull(channelService) && channelService.channels.get(channel) == null;
 
-		Component miniMessage = MM.deserialize(formatted);
+		Component miniMessage = MM.deserialize(formatted.trim());
 		String rawJson = JCS.serialize(miniMessage);
 		net.minecraft.network.chat.Component finalMessage = net.minecraft.network.chat.Component.Serializer
 				.fromJson(rawJson);
@@ -90,12 +90,17 @@ public class ChatService {
 	public void onServerChatEvent(@Nullable ServerChatEvent event) {
 		if (Objects.isNull(event)) return;
 
+
 		try {
+			String channel = "global";
 			String formatted = Config.format;
 
-			String name = event.getPlayer().getDisplayName().getString();
+			Player player = event.getPlayer();
+			String name = player.getDisplayName().getString();
 			String message = event.getRawText();
 
+			if (!Objects.isNull(channelService))
+				channel = channelService.determineChannel(player, message);
 
 			formatted = formatted
 					.replace("%name%", name)
@@ -148,7 +153,7 @@ public class ChatService {
 			event.setCanceled(true);
 
 			this.sendMessage(
-					"global",
+					channel,
 					server.getPlayerList().getPlayers().stream()
 							.map(it -> (Player)it).toList(),
 					formatted
