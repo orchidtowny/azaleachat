@@ -7,14 +7,15 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
-public class LuckPermsService {
+public final class LuckPermsService {
 
-	public boolean enabled = false;
+	public static boolean enabled = false;
 	private static final @NotNull Logger LOGGER = LogUtils.getLogger();
 
-	public @Nullable LuckPerms api;
+	public static @Nullable LuckPerms api;
 
-	public void register() {
+
+	public static void register() {
 		api = LuckPermsProvider.get();
 		enabled = true;
 

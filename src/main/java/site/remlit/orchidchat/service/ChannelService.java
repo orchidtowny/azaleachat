@@ -4,19 +4,16 @@ import com.mojang.logging.LogUtils;
 import net.luckperms.api.model.user.User;
 import net.luckperms.api.node.types.PermissionNode;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.event.config.ModConfigEvent;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import site.remlit.orchidchat.Config;
-import site.remlit.orchidchat.model.config.DeterminedChannel;
+import site.remlit.orchidchat.model.DeterminedChannel;
 
 import java.util.*;
 
-public class ChannelService {
+public final class ChannelService {
 
 	public LuckPermsService luckPermsService;
 
@@ -27,17 +24,10 @@ public class ChannelService {
 
 	private static final @NotNull Logger LOGGER = LogUtils.getLogger();
 
-	public HashMap<@NotNull String, @Nullable PermissionNode> channels = new HashMap<>();
-	public HashMap<@NotNull String, @NotNull List<String>> channelShortcuts = new HashMap<>();
+	public static HashMap<@NotNull String, @Nullable PermissionNode> channels = new HashMap<>();
+	public static HashMap<@NotNull String, @NotNull List<String>> channelShortcuts = new HashMap<>();
 
-
-	/**
-	 * Register events and other essentials for this service
-	 * */
-	@ApiStatus.Internal
-	public void register() {
-		MinecraftForge.EVENT_BUS.register(this);
-	}
+	public static HashMap<@NotNull UUID, @NotNull String> playerCurrentChannel = new HashMap<>();
 
 
 	/**
@@ -48,7 +38,7 @@ public class ChannelService {
 	 *
 	 * @throws IllegalArgumentException When a channel is already registered by that name
 	 * */
-	public void registerChannel(
+	public static void registerChannel(
 			@NotNull String name,
 			@Nullable PermissionNode perm
 	) throws IllegalArgumentException {
@@ -60,6 +50,22 @@ public class ChannelService {
 	}
 
 	/**
+	 * Set a persistent channel for a player to use.
+	 *
+	 * @param player Player to set channel for
+	 * @param channel Chanel to set
+	 * */
+	public static void setPlayerChannel(
+			@NotNull Player player,
+			@NotNull String channel
+	) {
+		if (!channels.containsKey(channel))
+			throw new IllegalArgumentException("This channel doesn't exist!");
+
+		playerCurrentChannel.put(player.getUUID(), channel);
+	}
+
+	/**
 	 * Determine if a player can see a channel by permissions
 	 *
 	 * @param channel Channel being checked
@@ -67,7 +73,7 @@ public class ChannelService {
 	 *
 	 * @return If that player can view that channel
 	 * */
-	public boolean canPlayerSee(
+	public static boolean canPlayerSee(
 			@NotNull String channel,
 			@NotNull Player player
 	) {
@@ -76,10 +82,10 @@ public class ChannelService {
 		// No permission required if set null
 		if (Objects.isNull(requiredPerm)) return true;
 
-		if (!luckPermsService.enabled || Objects.isNull(luckPermsService.api))
+		if (!LuckPermsService.enabled || Objects.isNull(LuckPermsService.api))
 			return false;
 
-		User user = luckPermsService.api.getUserManager().getUser(player.getUUID());
+		User user = LuckPermsService.api.getUserManager().getUser(player.getUUID());
 		if (Objects.isNull(user)) return false;
 
 		return user.getCachedData().getPermissionData()
@@ -95,12 +101,16 @@ public class ChannelService {
 	 *
 	 * @return Name of channel
 	 * */
-	public @NotNull DeterminedChannel determineChannel(
+	public static @NotNull DeterminedChannel determineChannel(
 			@NotNull Player sender,
 			@NotNull String rawMessage
 	) {
 		String usedShortcut = null;
 		String channel = "global";
+
+		String overrideChannel = playerCurrentChannel.get(sender.getUUID());
+		if (!Objects.isNull(overrideChannel))
+			channel = overrideChannel;
 
 		// TODO: allow setting channel to persist, then check sender against list.
 
@@ -129,7 +139,7 @@ public class ChannelService {
 	 *
 	 * @return Channel format, default if not found
 	 * */
-	public @Nullable String getFormat(
+	public static @Nullable String getFormat(
 			@NotNull String channel
 	) {
 		String specifiedChannelFormat = Config.formats.get(channel);
@@ -142,7 +152,7 @@ public class ChannelService {
 
 
 	@ApiStatus.Internal
-	public void setupChannels() {
+	public static void setupChannels() {
 		for (String channel : Config.channels.keySet()) {
 			String permission = Config.channels.get(channel);
 
@@ -152,7 +162,7 @@ public class ChannelService {
 					.build();
 
 			try {
-				this.registerChannel(channel, node);
+				registerChannel(channel, node);
 			} catch (IllegalArgumentException e) {
 				LOGGER.error("There was a problem registering channel {}: {}", channel, e.getMessage());
 			}
@@ -164,25 +174,17 @@ public class ChannelService {
 				continue;
 			}
 
-			this.channelShortcuts.put(channel, Config.channelShortcuts.get(channel));
+			channelShortcuts.put(channel, Config.channelShortcuts.get(channel));
 		}
 
 		if (!channels.containsKey("global"))
-			this.registerChannel("global", null);
+			registerChannel("global", null);
 	}
 
 	@ApiStatus.Internal
-	public void clearChannels() {
+	public static void clearChannels() {
 		channels.clear();
 		channelShortcuts.clear();
-	}
-
-
-	// Reload channel configurations whenever the mod config changes
-	@SubscribeEvent
-	public void onLoad(final ModConfigEvent event) {
-		this.clearChannels();
-		this.setupChannels();
 	}
 
 }

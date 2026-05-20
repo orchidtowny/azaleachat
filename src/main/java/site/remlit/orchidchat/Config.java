@@ -3,9 +3,6 @@ package site.remlit.orchidchat;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mojang.logging.LogUtils;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.config.ModConfigEvent;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -17,12 +14,9 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
-@Mod.EventBusSubscriber(
-		modid = OrchidChat.MODID,
-		bus = Mod.EventBusSubscriber.Bus.MOD
-)
+// jank config setup because the default forge one wasn't what i wanted.
+
 public final class Config {
-	// jank config setup because the default forge one wasn't what i wanted.
 
 	private static final @NotNull Logger LOGGER = LogUtils.getLogger();
 
@@ -74,12 +68,6 @@ public final class Config {
 		formats = cfg.formats;
 		channels = cfg.channels;
 		channelShortcuts = cfg.channelShortcuts;
-	}
-
-
-	@SubscribeEvent
-	static void onLoad(final ModConfigEvent event) {
-		loadConfig();
 	}
 
 }
