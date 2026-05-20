@@ -17,8 +17,13 @@ import static site.remlit.orchidchat.service.ComponentService.*;
 public final class ChannelCommand {
 	public static void register(@NotNull CommandDispatcher<CommandSourceStack> dispatcher) {
 		LiteralArgumentBuilder<CommandSourceStack> command = Commands.literal("channel")
-				.then(Commands.argument("name", string()))
-				.executes(ChannelCommand::execute);
+				.then(Commands.argument("name", word())
+						.suggests((context, builder) -> {
+							for (String channel : ChannelService.channels.keySet())
+								builder.suggest(channel);
+							return builder.buildFuture();
+						})
+						.executes(ChannelCommand::execute));
 
 		dispatcher.register(command);
 	}
@@ -49,7 +54,7 @@ public final class ChannelCommand {
 			);
 
 			command.getSource().sendSystemMessage(
-					c2mc(mm("<green>Switched to channel <light_green>"+name))
+					c2mc(mm("<dark_green>Switched to channel "+name))
 			);
 		} catch (IllegalArgumentException e) {
 			command.getSource().sendSystemMessage(
