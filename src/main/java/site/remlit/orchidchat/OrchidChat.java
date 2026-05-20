@@ -55,7 +55,7 @@ public final class OrchidChat {
 		CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
 
 		ChannelCommand.register(dispatcher);
-		//ChannelShortcutsCommand.register(dispatcher);
+		ChannelShortcutsCommand.register(dispatcher);
 
 		LOGGER.info("Registered commands");
 	}

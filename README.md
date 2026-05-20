@@ -14,3 +14,4 @@ you want to use by putting the channel shortcut (e.g. `g;`, `st;`) before your m
 ![chatcolor-test.png](assets/chatcolor-test.png)
 ![alternate-channel-test.png](assets/alternate-channel-test.png)
 ![channel-switcher.png](assets/channel-switcher.png)
+![channel-shortcuts-command.png](assets/channel-shortcuts-command.png)
